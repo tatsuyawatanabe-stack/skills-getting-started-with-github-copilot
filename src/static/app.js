@@ -4,6 +4,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Function to mask email for privacy
+  function maskEmail(email) {
+    const [local, domain] = email.split("@");
+    const maskedLocal = local.charAt(0) + "*".repeat(local.length - 1);
+    return `${maskedLocal}@${domain}`;
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -20,11 +27,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+        let participantsHtml = "";
+        if (details.participants.length > 0) {
+          participantsHtml = `<div class="participants"><h5>Participants:</h5><ul>${details.participants
+            .map((p) => `<li>${maskEmail(p)}</li>`)
+            .join("")}</ul></div>`;
+        }
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${participantsHtml}
         `;
 
         activitiesList.appendChild(activityCard);
@@ -62,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // Refresh the activities list to show updated participants
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
